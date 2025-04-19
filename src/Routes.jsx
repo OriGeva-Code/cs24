@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MainApp from './pages/MainApp';
+import HitPage from './pages/HitPage';
 import LandingPage from './pages/LandingPage';
 import AuthCallback from './components/AuthCallback';
 
@@ -10,8 +10,8 @@ const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={isDevMode ? <LandingPage /> : <MainApp />} />
-        <Route path="/MainApp" element={<MainApp />} />
+        <Route path="/" element={isDevMode ? <LandingPage /> : <HitPage />} />
+        <Route path="/HitPage" element={<HitPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
     </Router>

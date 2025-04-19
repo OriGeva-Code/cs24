@@ -18,7 +18,7 @@
     "autoprefixer": "^10.4.20",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.7.3",
+    "framer-motion": "^12.7.4",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.460.0",
     "postcss": "^8.4.49",
