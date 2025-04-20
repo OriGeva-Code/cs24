@@ -129,7 +129,6 @@ const App = () => {
   const loadTutorsWithFeedback = async () => {
     setIsLoadingTutors(true);
     setTutorsError(null); // Clear any previous error
-    const isDevMode = process.env.REACT_APP_DEV?.toLowerCase() === 'true';
 
     // Helper for fallback tutors
     const fallback = () => {
