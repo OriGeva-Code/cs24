@@ -13,11 +13,11 @@ import { NotificationProvider, showNotification } from './components/ui/notifica
 import mockData from './config/mockData.json';
 import { courseStyles, courseTypeOptions } from './config/courseStyles';
 import { courseMappings, specializationsMappings, tutorMappings } from './config/courseMappings';
+import LandingPage from './components/LandingPage';
 
 const App = () => {
+  const [selectedInstitute, setSelectedInstitute] = useState(null);
   const [courseType, setCourseType] = useState('cs');
-  const styles = courseStyles[courseType] || courseStyles.cs;
-
   const [selectedTag, setSelectedTag] = useState('בחר');
   const [isVisible, setIsVisible] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -27,135 +27,75 @@ const App = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showAllTutors, setShowAllTutors] = useState(false);
   const [tutorSpecialization, setTutorSpecialization] = useState('');
-  const [showFixedButton, setShowFixedButton] = useState(false);
   const [isLoadingTutors, setIsLoadingTutors] = useState(true);
   const [tutorsError, setTutorsError] = useState(null);
+  const [showFixedButton, setShowFixedButton] = useState(false);
+
   const TUTORS_PER_PAGE = 6;
   const isDevMode = process.env.REACT_APP_DEV?.toLowerCase() === 'true';
-  const hideIEButton = !isDevMode; // true = hide, false = show
-  
-  // Get specializations for current course type
+  const hideIEButton = !isDevMode;
+  const styles = courseStyles[courseType] || courseStyles.cs;
   const currentSpecializations = specializationsMappings[courseType] || [];
-  
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setIsVisible(true);
+    }, { threshold: 0.1 });
+
+    const missingSection = document.getElementById('missing-tests-section');
+    if (missingSection) observer.observe(missingSection);
+
+    return () => missingSection && observer.unobserve(missingSection);
+  }, []);
+
+  useEffect(() => {
+    if (selectedInstitute?.slug === 'HitPage') {
+      loadTutorsWithFeedback();
+    }
+  }, [courseType, selectedInstitute]);
+
   const handleCourseSwitch = (type) => {
     setCourseType(type);
-    // Reset selected tag based on whether the course type has specializations
     setSelectedTag(specializationsMappings[type]?.length > 0 ? 'בחר' : null);
-    // Reset other relevant states
     setSelectedYear(null);
     setSelectedCourse(null);
     setTutorSpecialization('');
   };
 
-  // Supabase authentication
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
-    });
-
-    // Load tutors with feedback
-    loadTutorsWithFeedback();
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Intersection Observer for missing tests section
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const missingSection = document.getElementById('missing-tests-section');
-    if (missingSection) {
-      observer.observe(missingSection);
-    }
-
-    return () => {
-      if (missingSection) {
-        observer.unobserve(missingSection);
-      }
-    };
-  }, []);
-
-  const calculateWilsonScore = (avg, count, maxRating = 5, z = 1.96) => {
-    if (count === 0) return 0;
-    const phat = avg; // already normalized!
-    const n = count;
-    // Prevent math errors on exact 0 or 1
-    const safePhat = Math.min(Math.max(phat, 0.0001), 0.9999);
-    const numerator =
-      safePhat +
-      (z ** 2) / (2 * n) -
-      (z * Math.sqrt((safePhat * (1 - safePhat) + (z ** 2) / (4 * n)) / n));
-    const denominator = 1 + (z ** 2) / n;
-    return numerator / denominator;
-  };
-
-  const scoreAndSortTutors = (tutors) => {
-    const tutorsWithStats = tutors.map((tutor) => {
-      const validRatings = tutor.feedback?.filter((f) => f.rating) || [];
-      const count = validRatings.length;
-      const sum = validRatings.reduce((acc, f) => acc + f.rating, 0);
-      const average_rating = count > 0 ? sum / count : null;
-      const wilson_score = count > 0
-        ? calculateWilsonScore(average_rating / 5, count)
-        : 0;
-
-      return {
-        ...tutor,
-        average_rating,
-        feedback_count: count,
-        wilson_score,
-      };
-    });
-
-    // Sort by Wilson score descending
-    const sorted = tutorsWithStats.sort((a, b) => b.wilson_score - a.wilson_score);
-    return sorted;
-  };
-
-  // Tutor data loading
   const loadTutorsWithFeedback = async () => {
     setIsLoadingTutors(true);
-    setTutorsError(null); // Clear any previous error
+    setTutorsError(null);
 
-    // Helper for fallback tutors
     const fallback = () => {
       const fallbackTutors = tutorMappings[courseType] || [];
       setTutorsWithFeedback(scoreAndSortTutors(fallbackTutors));
     };
 
-    // Helper for handling errors
     const handleError = (message) => {
-      if (isDevMode) {
-        fallback();
-      } else {
+      if (isDevMode) fallback();
+      else {
         setTutorsError(message);
-        setTutorsWithFeedback([]); // Clear tutors list if needed
+        setTutorsWithFeedback([]);
       }
     };
 
     try {
-      const { data: tutors, error } = await supabase
-        .rpc('get_tutors_with_feedback', {
-          degree_type: courseType,
-        });
-
-      if (error) return handleError("אין חיבור לשרת. נסה שוב מאוחר יותר.");
-      if (!tutors || tutors.length === 0) {
-        return handleError("אין מורים להצגה כרגע.");
-      }
+      const { data: tutors, error } = await supabase.rpc('get_tutors_with_feedback', {
+        degree_type: courseType,
+      });
+      if (error || !tutors?.length) return handleError("אין מורים להצגה כרגע.");
       setTutorsWithFeedback(scoreAndSortTutors(tutors));
     } catch {
       handleError("שגיאה בטעינת נתונים מהשרת.");
@@ -164,7 +104,25 @@ const App = () => {
     }
   };
 
-  // Handle feedback submission
+  const scoreAndSortTutors = (tutors) => {
+    return tutors.map((tutor) => {
+      const validRatings = tutor.feedback?.filter((f) => f.rating) || [];
+      const count = validRatings.length;
+      const sum = validRatings.reduce((acc, f) => acc + f.rating, 0);
+      const average_rating = count > 0 ? sum / count : null;
+      const wilson_score = count > 0 ? calculateWilsonScore(average_rating / 5, count) : 0;
+      return { ...tutor, average_rating, feedback_count: count, wilson_score };
+    }).sort((a, b) => b.wilson_score - a.wilson_score);
+  };
+
+  const calculateWilsonScore = (avg, count, maxRating = 5, z = 1.96) => {
+    if (count === 0) return 0;
+    const phat = Math.min(Math.max(avg, 0.0001), 0.9999);
+    const numerator = phat + (z ** 2) / (2 * count) - (z * Math.sqrt((phat * (1 - phat) + (z ** 2) / (4 * count)) / count));
+    const denominator = 1 + (z ** 2) / count;
+    return numerator / denominator;
+  };
+
   const handleSubmitFeedback = async (tutorId, rating, comment) => {
     if (!user) {
       showNotification('אנא התחבר כדי להשאיר ביקורת', 'warning');
@@ -172,7 +130,6 @@ const App = () => {
     }
 
     try {
-      // Validate comment on server side as well
       const MAX_COMMENT_LENGTH = 200;
       const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([^\s]+\.(com|org|net|il|co|io))/gi;
 
@@ -188,12 +145,8 @@ const App = () => {
 
       let error;
 
-      // If rating is null, it means we're deleting the feedback
       if (rating === null) {
-        ({ error } = await supabase
-          .rpc('delete_feedback', {
-            tutor_id: tutorId,
-          }));
+        ({ error } = await supabase.rpc('delete_feedback', { tutor_id: tutorId }));
 
         if (error) {
           showNotification('שגיאה במחיקת הביקורת', 'error');
@@ -205,20 +158,13 @@ const App = () => {
         return;
       }
 
-      // Insert or update feedback using the server-side function
-      ({ error } = await supabase
-        .rpc('upsert_feedback', {
-          tutor_id: tutorId,
-          rating: rating,
-          comment: comment,
-        }));
+      ({ error } = await supabase.rpc('upsert_feedback', { tutor_id: tutorId, rating, comment }));
 
       if (error) {
         showNotification('שגיאה בשליחת הביקורת', 'error');
         return;
       }
 
-      // Reload tutors with feedback
       loadTutorsWithFeedback();
       showNotification('הביקורת נשלחה בהצלחה', 'success');
     } catch (error) {
@@ -232,7 +178,6 @@ const App = () => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = 'cs24.hit@gmail.com';
       document.body.appendChild(textArea);
@@ -249,16 +194,12 @@ const App = () => {
   };
 
   useEffect(() => {
-    // Reload tutors when courseType changes
     loadTutorsWithFeedback();
   }, [courseType]);
 
   const getCoursesForYear = (year) => {
     const courses = courseMappings[courseType];
-    // Add quote mark to year if it's not 'בחירה'
     const yearKey = year === 'רב-תחומי' ? year : year + "'";
-    console.log('Looking for courses for year:', yearKey);
-    console.log('Available years:', Object.keys(courses || {}));
     return courses?.[yearKey] || [];
   };
 
@@ -270,7 +211,6 @@ const App = () => {
     } else {
       setSelectedYear(year);
       setSelectedCourse(null);
-      // Reset specialization if not year ג or ד and department has specializations
       if (specializationsMappings[courseType]?.length > 0 && year !== 'שנה ג' && year !== 'שנה ד') {
         setTutorSpecialization('');
       }
@@ -288,6 +228,21 @@ const App = () => {
     }
     return true;
   });
+
+  if (!selectedInstitute) {
+    return <LandingPage onSelectInstitute={setSelectedInstitute} />;
+  }
+
+  if (selectedInstitute.slug !== 'HitPage') {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center p-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-4">עוד לא הוספנו תוכן עבור {selectedInstitute.name}</h1>
+          <p className="text-lg">בינתיים אפשר לבדוק את המאגר של HIT</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <NotificationProvider>
