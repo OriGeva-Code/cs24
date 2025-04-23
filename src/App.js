@@ -316,7 +316,7 @@ const App = () => {
           {/* Course Type Selection Buttons */}
           <div className="flex flex-row flex-wrap gap-3 mt-4 justify-center mb-5">
             {courseTypeOptions
-              .filter((option) => !hideIEButton || option.type !== 'ie')
+              .filter((option) => option.type)
               .map((option) => (
                 <Button
                   key={option.type}
