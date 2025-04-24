@@ -306,7 +306,7 @@ const App = () => {
                 className="flex items-center transition-transform duration-300 hover:scale-110"
                 title="בואו נתחבר"
               >
-                <h2 className={`text-xl ${styles.textColor}`}> פותח ע״י קקי פיפי </h2>
+                <h2 className={`text-xl ${styles.textColor}`}> פותח ע״י דניאל זיו  </h2>
                 <p> - </p>
                 <Linkedin strokeWidth={1} className="h-6 w-6" color="#0077B5" />
               </a>
