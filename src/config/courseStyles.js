@@ -64,7 +64,6 @@ const courseStyles = {
     TLBg: 'from-rose-800 via-rose-950 to-rose-800',
     shadowGlow: 'rgba(225, 29, 72, 0.3)',
     shadowGlowHover: 'rgba(225, 29, 72, 0.5)',
-    fillColor: '#e11d48'
   },
 };
 
