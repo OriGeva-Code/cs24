@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { courseMappings, specializationsMappings } from '../config/courseMappings.js';
-import { courseStyles } from '../config/courseStyles';
+import { courseStyles, courseTypeOptions } from '../config/courseStyles';
 import { showNotification } from './ui/notification';
 
 const getYearsForDegree = (degree) => {
@@ -198,8 +198,11 @@ const JoinRequestModal = ({ isOpen, onClose, courseType: initialCourseType, sess
                 required
               >
                 <option value="">בחר מסלול</option>
-                <option value="cs">מדעי המחשב</option>
-                <option value="ee">הנדסת חשמל</option>
+                {courseTypeOptions.map(({ type, label }) => (
+                  <option key={type} value={type}>
+                {label}
+                  </option>
+                ))}
               </select>
             </div>
 
