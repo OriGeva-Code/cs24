@@ -17,10 +17,9 @@ const courseStyles = {
     bgLight: 'bg-blue-50',
     subjectBg: 'bg-blue-100',
     starColor: 'text-blue-400',
-    TLBg: 'from-blue-700 via-blue-800 to-blue-900',
+    TLBg: 'from-blue-800 via-blue-900 to-blue-800',
     shadowGlow: 'rgba(37, 99, 235, 0.3)',
-    shadowGlowHover: 'rgba(37, 99, 235, 0.5)',
-    fillColor: '#2563eb'
+    shadowGlowHover: 'rgba(37, 99, 235, 0.5)'
   },
   ee: {
     buttonPrimary: 'bg-purple-800 text-white hover:bg-purple-700 shadow-md',
@@ -40,17 +39,16 @@ const courseStyles = {
     bgLight: 'bg-purple-50',
     subjectBg: 'bg-purple-100',
     starColor: 'text-purple-400',
-    TLBg: 'from-purple-700 via-purple-800 to-purple-900',
+    TLBg: 'from-purple-800 via-purple-950 to-purple-800',
     shadowGlow: 'rgba(147, 51, 234, 0.3)',
-    shadowGlowHover: 'rgba(147, 51, 234, 0.5)',
-    fillColor: '#9333ea'
+    shadowGlowHover: 'rgba(147, 51, 234, 0.5)'
   },
   ie: {
     buttonPrimary: 'bg-rose-800 text-white hover:bg-rose-700 shadow-md',
     buttonSecondary: 'bg-white text-rose-800 hover:bg-rose-100 shadow-md',
     buttonThird: 'bg-white text-rose-600 hover:bg-rose-100',
     buttonMissing: 'bg-rose-800 text-white',
-    bgGradient: 'from-rose-50 to-white', // Softer background
+    bgGradient: 'from-rose-50 to-white',
     textColor: 'text-rose-950',
     textSecondary: 'text-rose-600 hover: text-rose-700',
     cardBorder: 'border-rose-200',
@@ -63,7 +61,7 @@ const courseStyles = {
     bgLight: 'bg-rose-50',
     subjectBg: 'bg-rose-100',
     starColor: 'text-rose-400',
-    TLBg: 'from-rose-700 via-rose-800 to-rose-900',
+    TLBg: 'from-rose-800 via-rose-950 to-rose-800',
     shadowGlow: 'rgba(225, 29, 72, 0.3)',
     shadowGlowHover: 'rgba(225, 29, 72, 0.5)',
     fillColor: '#e11d48'
