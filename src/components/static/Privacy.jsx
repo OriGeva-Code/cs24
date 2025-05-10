@@ -217,8 +217,7 @@ const Privacy = () => {
           <h2 className={`${styles.textSecondary} text-2xl font-bold mb-4`}>Contact Us</h2>
           <p className="mb-4">If you have any questions about this Privacy Policy, You can contact us:</p>
           <p>
-            By email:{' '}
-            <a 
+           <a 
               href="mailto:cs24.hit@gmail.com"
               className={`${styles.textSecondary} hover:text-blue-700 underline`}
             >
